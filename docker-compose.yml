@@ -2,7 +2,7 @@ version: '3'
 
 services:
   http:
-    container_name: http-container
+    container_name: dev-challenge-sheet-http-container
     build:
       context: docker/http
       dockerfile: Dockerfile
@@ -13,7 +13,7 @@ services:
       - net
 
   php:
-    container_name: php-container
+    container_name: dev-challenge-sheet-php-container
     build:
       context: docker/php
       dockerfile: dev/Dockerfile
@@ -28,7 +28,7 @@ services:
       - net
 
   db:
-    container_name: db-container
+    container_name: dev-challenge-sheet-db-container
     image: mysql:latest
     restart: always
     volumes:

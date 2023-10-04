@@ -2,8 +2,6 @@
 
 namespace App\Controller;
 
-use App\DTO\Sheet1;
-use App\DTO\Sheet2;
 use App\Service\ExcelService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,53 +10,64 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ExcelPublicApiV1Controller extends AbstractController
 {
-    #[Route('/api/v1/{sheetId}/{cellId}', name: 'app_excel_public_api123', requirements: [
-        'sheetId' => '\d+',
-    ], methods: ['POST'])]
-    public function upsert(Request $request, ExcelService $excelService, int $sheetId, $cellId): JsonResponse
+    protected ExcelService $excelService;
+
+    public function __construct(ExcelService $excelService)
     {
-        $sheet = match ($sheetId) {
-            1 => Sheet1::data,
-            2 => Sheet2::data,
-            default => $this->json([], 422),
-        };
-
-        $variable = json_decode($request->getContent(), true)["value"];
-        $sheet[$cellId] = $excelService->calc($variable, $sheet);
-
-        return $this->json([
-            "value" => $sheet[$cellId],
-            "result" =>  $sheet[$cellId]
-        ], 201);
+        $this->excelService = $excelService;
     }
 
-    #[Route('/api/v1/{sheetId}', name: 'app_excel_public_api2', requirements: [
-        'sheetId' => '\d+',
-    ], methods: ['GET'])]
-    public function index(int $sheetId): JsonResponse
+    #[Route('/api/v1/{sheetId}', methods: ['GET'])]
+    public function getAllCellsFromSheet($sheetId): JsonResponse
     {
-        return match ($sheetId) {
-            1 => $this->json(Sheet1::data),
-            2 => $this->json(Sheet2::data),
-            default => $this->json([], 404),
-        };
+        if ($sheet = $this->getExcelService()->getSheetById($sheetId)) {
+            return $this->json([$sheet]);
+        }
+
+        return $this->json(["Sheet is missing"], 404);
     }
 
-    #[Route('/api/v1/{sheetId}/{cellId}', name: 'app_excel_public_api', requirements: [
-        'sheetId' => '\d+',
-    ], methods: ['GET'])]
-    public function index2(int $sheetId, $cellId): JsonResponse
+    #[Route('/api/v1/{sheetId}/{cellId}', methods: ['GET'])]
+    public function getCellValueFromSheet($sheetId, $cellId): JsonResponse
     {
-        $sheet = match ($sheetId) {
-            1 => Sheet1::data,
-            2 => Sheet2::data,
-            default => $this->json([], 404),
-        };
-
-        if (empty($value = $sheet[$cellId])) {
-            return $this->json([], 404);
+        if (empty($value = $this->getExcelService()->getCellValueById($sheetId, $cellId))) {
+            return $this->json(["Value is missing"], 404);
         }
 
         return $this->json([$value]);
+    }
+
+    #[Route('/api/v1/{sheetId}/{cellId}', methods: ['POST'])]
+    public function upsert(Request $request, ExcelService $excelService,$sheetId, $cellId): JsonResponse
+    {
+        $variable = json_decode($request->getContent(), true)["value"];
+
+        if (!($value = $excelService->upsertSheetCell($variable, $sheetId))) {
+            $this->json(["value" => $variable, "result" => "ERROR"], 422);
+        }
+
+        return $this->json([$value], 201);
+    }
+
+    #[Route('/{any}', requirements: ['any' => '.*'], methods: ['GET', 'POST', 'PUT', 'DELETE'])]
+    public function defaultEndpoint(): JsonResponse
+    {
+        return $this->json(["Undefined endpoint"], 404);
+    }
+
+    public function getExcelService(): ExcelService
+    {
+        return $this->excelService;
+    }
+
+    /**
+     * @param ExcelService $excelService
+     * @return self
+     */
+    public function setExcelService(ExcelService $excelService): self
+    {
+        $this->excelService = $excelService;
+
+        return $this;
     }
 }

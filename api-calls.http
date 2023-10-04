@@ -1,14 +1,18 @@
-### 201
-GET  https://127.0.0.1:8001/api/v1/1
-
+### Get sheet all cell values
+### 200
+GET  http://localhost:45001/api/v1/sheet1
 ### 404
-GET  https://127.0.0.1:8001/api/v1/12
+GET  http://localhost:45001/api/v1/sheet2
 
+### Get sheet cell value
+### 200
+GET  http://localhost:45001/api/v1/sheet1/var1
+### 404
+GET  http://localhost:45001/api/v1/sheet1/var999
 
-#_________________________
 
 ### 201
-POST  https://127.0.0.1:8001/api/v1/1/var3
+POST  http://localhost:45001/api/v1/sheet1/var3
 Content-Type: application/json
 
 {
