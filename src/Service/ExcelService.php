@@ -4,6 +4,16 @@ namespace App\Service;
 
 class ExcelService
 {
+    public function getSheetById(): array
+    {
+        
+    }
+    
+    public function getCellValueById(string $sheetId, string $cellId): float
+    {
+        
+    }
+    
     /**
      * @param string $variable
      * @param $sheet

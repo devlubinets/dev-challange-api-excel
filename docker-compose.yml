@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  http:
+    container_name: http-container
+    build:
+      context: docker/http
+      dockerfile: Dockerfile
+    volumes:
+      - ./docker/http/conf.d:/etc/nginx/conf.d
+      - .:/app
+    networks:
+      - net
+
+  php:
+    container_name: php-container
+    build:
+      context: docker/php
+      dockerfile: dev/Dockerfile
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./docker/php/dev/log:/var/www/log
+      - ./docker/php/dev/configuration:/usr/local/etc/php
+      - .:/app
+    networks:
+      - net
+
+  db:
+    container_name: db-container
+    image: mysql:latest
+    restart: always
+    volumes:
+      - ./docker/db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - net
+
+volumes:
+  db-data:
+
+networks:
+  net:
